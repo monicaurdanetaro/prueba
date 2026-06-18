@@ -260,6 +260,13 @@ const RESP_DATA = [
 ["11/6/2026 13:26:42","18 / 20","Agustin Salinas","villa del parque 2","Apv senior","a","c","b","c","a","b","a","b","d","a","VILLA DEL PARQUE","3"],
 ["11/6/2026 13:27:11","18 / 20","Sandra Hernandez","Villa del Parque II","Dermo","a","c","b","c","a","b","a","b","d","a","VILLA DEL PARQUE","3"],
 ["16/6/2026 15:16:31","16 / 20","Yoana Sager","Quinta 46 DT","DT","a","c","b","a","a","b","a","b","d","a","QUINTA 46","1"],
+["18/6/2026 11:49:53","20 / 20","Monica Noguera","JUNCAL PODIUM","Apv","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
+["18/6/2026 11:49:57","20 / 20","Milena Cerda","JUNCAL PODIUM","Selectiva perfumeria","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
+["18/6/2026 12:23:25","18 / 20","Claudia Arevalo","JUNCAL PODIUM","Apv senior","a","c","b","c","c","b","a","b","c","a","JUNCAL PODIUM","2"],
+["18/6/2026 12:30:37","18 / 20","Herrera Analia Paula","JUNCAL PODIUM","DT","a","c","c","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
+["18/6/2026 12:57:56","14 / 20","Mariela Silvana Flores","ESPER","Apv","b","d","a","c","c","b","a","b","d","a","ESPER","1"],
+["18/6/2026 12:58:19","18 / 20","Valeria Tappie","ESPER","Apv","b","c","b","c","c","b","a","b","d","a","ESPER","1"],
+["18/6/2026 12:58:27","16 / 20","Valeria Sanchez","ESPER","Dt","b","c","a","c","c","b","a","b","d","a","ESPER","1"]
 ["18/6/2026 11:49:54","20 / 20","Monica Noguera","JUNCAL PODIUM","Apv","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
 ["18/6/2026 11:49:58","20 / 20","Milena Cerda","JUNCAL PODIUM","Selectiva perfumeria","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"]
 ];
@@ -643,6 +650,8 @@ const GID_NOMINA = '1331171004';
 let cA=null, cS=null;
 let ACTIVE_AREA = 0;  // 0 = todas las áreas
 let STORE_SEARCH = ''; // texto del buscador de tienda
+// Datos globales para recalcular métricas al filtrar por área
+let G_nomByStore={}, G_rByStore={}, G_sByStore={}, G_nomByArea={}, G_rByArea={};
 
 const sc = s => { const m=String(s||'').match(/^(\d+)/); return m?+m[1]:null; };
 
@@ -711,24 +720,13 @@ function renderAll(rawResp, nom) {
     if(a>=1&&a<=3)rByArea[a].push(score);
   });
 
-  const totN=Object.values(nomByStore).reduce((a,b)=>a+b,0);
-  const totR=Object.values(rByStore).reduce((a,b)=>a+b,0);
-  const allSc=resp.map(r=>sc(r[1])).filter(x=>x!==null);
-  const avgSc=allSc.length?(allSc.reduce((a,b)=>a+b,0)/allSc.length):null;
-  const passed=allSc.filter(s=>s>=14).length;
-  const pctP=totN>0?Math.round(totR/totN*100):0;
-  const pctPas=allSc.length?Math.round(passed/allSc.length*100):0;
+  // Guardar en globals para que setArea pueda recalcular métricas
+  G_nomByStore=nomByStore; G_rByStore=rByStore; G_sByStore=sByStore;
+  G_nomByArea=nomByArea; G_rByArea=rByArea;
 
   const $=id=>document.getElementById(id);
   const set=(id,v)=>{$(id).textContent=v};
-  set('m-resp',totR); set('m-resp-s',`de ${totN} en nómina`);
-  set('m-pct',pctP+'%');
-  $('m-pct').className='mv '+(pctP>=70?'green':pctP>=40?'amber':'red');
-  set('m-pct-s',`${totN-totR} pendientes`);
-  set('m-avg',avgSc!==null?avgSc.toFixed(1):'—');
-  $('m-avg').className='mv '+(avgSc>=14?'green':'amber');
-  set('m-pass',pctPas+'%');
-  set('m-pass-s',`${passed} de ${allSc.length} respondieron`);
+  updateMetrics(0); // mostrar totales globales al inicio
 
   const aL=['Área 1','Área 2','Área 3'];
   const aPt=[1,2,3].map(a=>nomByArea[a]>0?Math.round(rByArea[a].length/nomByArea[a]*100):0);
@@ -840,6 +838,40 @@ function filterP(){
   document.getElementById('pcount').textContent = `Mostrando ${n} personas`;
 }
 
+function updateMetrics(a) {
+  // Calcula y muestra métricas según el área seleccionada (0 = todas)
+  const $=id=>document.getElementById(id);
+  const set=(id,v)=>{$(id).textContent=v};
+
+  let totN, totR, allSc;
+  if (!a) {
+    // Todas las áreas
+    totN = Object.values(G_nomByStore).reduce((x,y)=>x+y,0);
+    totR = Object.values(G_rByStore).reduce((x,y)=>x+y,0);
+    allSc = STORES.flatMap(s => G_sByStore[s]||[]);
+  } else {
+    // Solo el área seleccionada
+    totN = G_nomByArea[a] || 0;
+    totR = (G_rByArea[a]||[]).length;
+    allSc = (G_rByArea[a]||[]).filter(x=>x!==null);
+  }
+
+  const avgSc = allSc.length ? (allSc.reduce((x,y)=>x+y,0)/allSc.length) : null;
+  const passed = allSc.filter(s=>s>=14).length;
+  const pctP   = totN>0 ? Math.round(totR/totN*100) : 0;
+  const pctPas = allSc.length ? Math.round(passed/allSc.length*100) : 0;
+
+  set('m-resp', totR);
+  set('m-resp-s', `de ${totN} en nómina`);
+  set('m-pct', pctP+'%');
+  $('m-pct').className = 'mv '+(pctP>=70?'green':pctP>=40?'amber':'red');
+  set('m-pct-s', `${totN-totR} pendientes`);
+  set('m-avg', avgSc!==null ? avgSc.toFixed(1) : '—');
+  $('m-avg').className = 'mv '+(avgSc>=14?'green':'amber');
+  set('m-pass', pctPas+'%');
+  set('m-pass-s', `${passed} de ${allSc.length} respondieron`);
+}
+
 function setArea(a, btn) {
   ACTIVE_AREA = a;
   // Botones de área activos
@@ -849,7 +881,9 @@ function setArea(a, btn) {
   const storeSearchEl = document.getElementById('store-search');
   if (storeSearchEl) storeSearchEl.value = '';
   STORE_SEARCH = '';
-  // Aplicar filtros
+  // Actualizar métricas del header
+  updateMetrics(a);
+  // Aplicar filtros a tablas
   applyFilters();
   // Actualizar colores de gráficos
   updateCharts();
