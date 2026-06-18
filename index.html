@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Evaluación Módulo 1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a18;font-size:15px;line-height:1.6}
+  h1{font-size:20px;font-weight:500}h2{font-size:16px;font-weight:500}
+  .hdr{background:#fff;border-bottom:0.5px solid rgba(0,0,0,.12);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .badge{font-size:11px;background:#eaf3de;color:#3b6d11;padding:3px 10px;border-radius:20px}
+  .upd{font-size:12px;color:#aaa;margin-top:2px}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px}
+  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .mc{background:#fff;border:0.5px solid rgba(0,0,0,.1);border-radius:10px;padding:16px 18px}
+  .ml{font-size:12px;color:#999;margin-bottom:5px}
+  .mv{font-size:28px;font-weight:500;line-height:1.2}
+  .ms{font-size:12px;color:#bbb;margin-top:4px}
+  .green{color:#3b6d11}.amber{color:#854f0b}.blue{color:#185fa5}.red{color:#a32d2d}
+  .sec{background:#fff;border:0.5px solid rgba(0,0,0,.1);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .sh{padding:15px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+  .sh:hover{background:#fafaf8}
+  .chev{font-size:14px;color:#ccc;transition:transform .2s;display:inline-block}
+  .chev.open{transform:rotate(180deg)}
+  .sb{display:none;padding:0 20px 20px;border-top:0.5px solid rgba(0,0,0,.07)}
+  .sb.open{display:block}
+  .crow{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-top:20px}
+  .clbl{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;font-weight:500;color:#aaa;text-align:left;padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,.1);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+  td{padding:9px 10px;border-bottom:0.5px solid rgba(0,0,0,.06);vertical-align:middle}
+  tr:last-child td{border-bottom:none}tr:hover td{background:#fafaf8}
+  .bar{height:6px;background:#f0eeea;border-radius:3px;overflow:hidden;min-width:70px}
+  .bf{height:100%;border-radius:3px}
+  .bg-g{background:#63991b}.bg-a{background:#ef9f27}.bg-r{background:#e24b4a}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
+  .pg{background:#eaf3de;color:#3b6d11}.pa{background:#faeeda;color:#854f0b}
+  .pr{background:#fcebeb;color:#a32d2d}.pb{background:#e6f1fb;color:#185fa5}
+  .pgy{background:#f1efe8;color:#5f5e5a}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:16px 0 4px}
+  .tab{font-size:12px;padding:5px 12px;border-radius:20px;border:0.5px solid rgba(0,0,0,.15);cursor:pointer;background:#fff;color:#666}
+  .tab.on{background:#185fa5;color:#fff;border-color:#185fa5}
+  .tab:hover:not(.on){background:#f0f0ee}
+  .filt{display:flex;gap:10px;flex-wrap:wrap;padding:16px 0 12px}
+  .filt input,.filt select{font-size:13px;padding:7px 12px;border:0.5px solid rgba(0,0,0,.18);border-radius:8px;background:#fff;outline:none;color:#1a1a18}
+  .filt input{flex:1;min-width:180px}
+  .cnote{font-size:12px;color:#bbb;margin-top:12px}
+  .info-banner{background:#e6f1fb;color:#185fa5;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:20px;line-height:1.6}
+  .area-filter-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:0.5px solid rgba(0,0,0,.1);border-radius:12px;padding:14px 20px;margin-bottom:14px}
+  .area-filter-label{font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap}
+  .area-filter-hint{font-size:12px;color:#bbb;margin-left:auto;white-space:nowrap}
+  .afbtn{font-size:13px;padding:6px 16px;border-radius:20px;border:0.5px solid rgba(0,0,0,.15);cursor:pointer;background:#fff;color:#555;font-weight:400;transition:all .15s}
+  .afbtn.on{background:#1a1a18;color:#fff;border-color:#1a1a18}
+  .afbtn:hover:not(.on){background:#f0f0ee}
+  @media(max-width:680px){.mgrid{grid-template-columns:repeat(2,1fr)}.crow{grid-template-columns:1fr}.wrap{padding:14px}.hdr{padding:14px 16px}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div>
+      <h1>Evaluación Módulo 1 - Orden y limpieza y piso de ventas</h1>
+      <div class="upd" id="upd">Actualizando datos...</div>
+    </div>
+    <span class="badge" id="mode-badge" style="background:#faeeda;color:#854f0b">Cargando...</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="tryLive()" id="btn-live" style="font-size:13px;padding:7px 14px;border:0.5px solid rgba(0,0,0,.2);border-radius:8px;background:#fff;cursor:pointer;color:#1a1a18">↻ Refrescar</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="info-banner" id="info-banner" style="display:none">
+    ⚠️ No se pudieron cargar los datos en vivo. Mostrando datos embebidos. Intentá con <b>↻ Refrescar</b>.
+  </div>
+
+  <!-- FILTRO GLOBAL DE ÁREA -->
+  <div class="area-filter-bar">
+    <span class="area-filter-label">Filtrar por área:</span>
+    <div id="area-filter-btns" style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="afbtn on" onclick="setArea(0,this)">Todas las áreas</button>
+      <button class="afbtn" onclick="setArea(1,this)">Área 1</button>
+      <button class="afbtn" onclick="setArea(2,this)">Área 2</button>
+      <button class="afbtn" onclick="setArea(3,this)">Área 3</button>
+    </div>
+    <span class="area-filter-hint" id="area-hint">Filtra métricas, tiendas y personas</span>
+  </div>
+
+  <div class="mgrid">
+    <div class="mc"><div class="ml">Respuestas totales</div><div class="mv blue" id="m-resp">—</div><div class="ms" id="m-resp-s"></div></div>
+    <div class="mc"><div class="ml">% Participación</div><div class="mv" id="m-pct">—</div><div class="ms" id="m-pct-s"></div></div>
+    <div class="mc"><div class="ml">Nota promedio</div><div class="mv" id="m-avg">—</div><div class="ms">sobre 20 puntos</div></div>
+    <div class="mc"><div class="ml">% Aprobados (≥ 14)</div><div class="mv green" id="m-pass">—</div><div class="ms" id="m-pass-s"></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sh" onclick="tog('area')"><h2>Participación y resultados por área</h2><span class="chev open" id="ch-area">▾</span></div>
+    <div class="sb open" id="bd-area">
+      <div class="crow">
+        <div><div class="clbl">% Participación</div><div style="position:relative;height:200px"><canvas id="cArea" role="img" aria-label="Participación por área"></canvas></div></div>
+        <div><div class="clbl">Nota promedio</div><div style="position:relative;height:200px"><canvas id="cScore" role="img" aria-label="Nota promedio por área"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sh" onclick="tog('store')"><h2>Detalle por tienda</h2><span class="chev" id="ch-store">▾</span></div>
+    <div class="sb" id="bd-store">
+      <div style="padding-top:16px">
+        <table><thead><tr><th>Tienda</th><th>Área</th><th>Nómina</th><th>Respondieron</th><th>Participación</th><th>Nota prom.</th><th>% Aprobados</th></tr></thead>
+        <tbody id="store-tb"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sh" onclick="tog('people')"><h2>Detalle individual</h2><span class="chev" id="ch-people">▾</span></div>
+    <div class="sb" id="bd-people">
+      <div class="filt">
+        <input type="text" id="srch" placeholder="Buscar nombre..." oninput="filterP()">
+        <select id="fStore" onchange="filterP()"><option value="">Todas las tiendas</option></select>
+        <select id="fResult" onchange="filterP()">
+          <option value="">Todos los estados</option>
+          <option value="pass">Aprobados (≥ 14)</option>
+          <option value="fail">Desaprobados</option>
+          <option value="pending">Pendientes</option>
+        </select>
+      </div>
+      <table><thead><tr><th>Nombre</th><th>Tienda</th><th>Cargo</th><th>Área</th><th>Nota</th><th>Estado</th><th>Fecha</th></tr></thead>
+      <tbody id="people-tb"></tbody></table>
+      <div class="cnote" id="pcount"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// DATOS EMBEBIDOS — se actualizan automáticamente al usar "Cargar en vivo"
+// ═══════════════════════════════════════════════════════════════════════
+const RESP_DATA = [
+["10/6/2026 13:17:33","14 / 20","Lorena Arrieta","25 de Mayo","Apv senior","c","b","b","c","c","b","b","b","d","a","LA NOBLEZA","3"],
+["12/6/2026 15:45:15","20 / 20","Rocio Carrizo","25 de mayo","Apv senior","a","c","b","c","c","b","a","b","d","a","LA NOBLEZA","3"],
+["11/6/2026 14:52:54","18 / 20","Cecilia Santini","Alesel","Farmaceutico","a","c","b","a","c","b","a","b","d","a","ALESEL","1"],
+["9/6/2026 15:31:50","14 / 20","Catherine Antury","Botanico","Gerente de tienda","a","c","b","d","b","b","b","b","d","a","BOTANICO","3"],
+["9/6/2026 15:31:03","10 / 20","Victor Baron","Botanico","Apv","b","c","a","d","b","b","b","b","d","a","BOTANICO","3"],
+["9/6/2026 15:33:31","10 / 20","Edgar","Botanico","Apf","a","c","b","a","b","b","b","a","a","a","BOTANICO","3"],
+["11/6/2026 10:43:17","20 / 20","Soledad Diaz Otañez","Callao","Farmaceutica","a","c","b","c","c","b","a","b","d","a","OLLEROS","3"],
+["10/6/2026 13:09:50","16 / 20","Omar Gomez","Devoto","Gerente de Tienda","a","d","b","c","c","b","b","b","d","a","DEVOTO","3"],
+["16/6/2026 15:17:10","14 / 20","Martina Babenco","Farmatodo quinta 46","Asesora","c","c","d","c","b","b","a","b","d","a","QUINTA 46","1"],
+["9/6/2026 15:30:35","10 / 20","Edgar Zorrilla","Farmacia botanico","Apf","a","c","a","d","a","b","c","b","c","a","BOTANICO","3"],
+["9/6/2026 15:10:19","18 / 20","Federico Garcete","Farmacia lupo","Apv","a","c","b","d","c","b","a","b","d","a","LUPO","2"],
+["10/6/2026 9:20:46","20 / 20","Wanda Sosa","Farmacia mark","Apv","a","c","b","c","c","b","a","b","d","a","MARK","3"],
+["11/6/2026 16:03:31","20 / 20","Denise Leal Dasso","Farmatodo","Dermoconsejera","a","c","b","c","c","b","a","b","d","a","RIVADAVIA","3"],
+["16/6/2026 11:26:07","16 / 20","Guadalupe Fabian","Farmatodo","Apv","b","c","b","c","c","b","b","b","d","a","GRAN FERRARI","2"],
+["10/6/2026 13:10:29","18 / 20","Grandi Shaiel","Farmatodo","Dermocosmetica","b","c","b","c","c","b","a","b","d","a","SM CENTER","3"],
+["10/6/2026 13:09:22","18 / 20","Ivanova Rangel","Farmatodo Botanico","APV","a","a","b","c","c","b","a","b","d","a","BOTANICO","3"],
+["10/6/2026 13:10:35","14 / 20","Natalia Castillo","Farmatodo olivos","Apv senior","a","b","b","c","b","b","a","b","d","c","OLIVOS","3"],
+["11/6/2026 16:02:43","20 / 20","Rocio Barrientos","Farmatodo Rivadavia","Apv mostrador","a","c","b","c","c","b","a","b","d","a","RIVADAVIA","3"],
+["11/6/2026 13:27:29","18 / 20","Rodriguez Daiana","Farmatodo villa del parque 2","Empleado farmacia","a","c","b","c","c","a","a","b","d","a","VILLA DEL PARQUE","3"],
+["9/6/2026 11:48:12","20 / 20","Carlos Carrion","Ferrari","Gerente de tienda","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 10:31:20","14 / 20","Camila Carrion","Ferrari","APV","a","c","b","c","c","a","b","b","c","a","GRAN FERRARI","2"],
+["16/6/2026 11:29:11","18 / 20","Lucas Rocha","Ferrari","Apv","a","c","b","c","c","b","b","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 15:30:35","20 / 20","Rocio Mosteirin","Ferrari","Apv","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 10:32:53","16 / 20","Walter Romero","Gran ferrari","Apv","b","a","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 10:34:17","14 / 20","Paula Bravo","Gran ferrari","Apv","a","c","b","c","c","a","b","b","c","a","GRAN FERRARI","2"],
+["16/6/2026 11:24:16","20 / 20","Samanta Rivero","Gran ferrari","senior","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 11:29:01","20 / 20","Fernandez Leticia","Gran Ferrari","Dt","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 11:31:12","20 / 20","Fernandez Leticia","Gran ferrari","Dt","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 15:32:16","20 / 20","Yesica Aguirre","Gran Ferrari","Senior","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 15:33:56","10 / 20","Nelson Gutierrez","Gran ferrari","APV","b","c","a","d","c","b","b","b","a","a","GRAN FERRARI","2"],
+["16/6/2026 15:44:04","18 / 20","Nelson Gutierrez","Gran ferrari","Apv","a","a","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["11/6/2026 14:52:59","18 / 20","Virginia Colombi","Iglesia farmaceutica","Apv senior","a","c","b","a","c","b","a","b","d","a","IGLESIA","1"],
+["11/6/2026 14:54:16","20 / 20","Guillermo Dulce","Km 47.5","Gerente de tienda","a","c","b","c","c","b","a","b","d","a","KM 47.5","1"],
+["16/6/2026 15:29:25","20 / 20","Anabella Acosta","La sante Gran Ferrari","Dermoconsejera","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 10:31:59","20 / 20","Nicolas Gomez","La Sante Ferrari","Empleado Farmacia","a","c","b","c","c","b","a","b","d","a","GRAN FERRARI","2"],
+["16/6/2026 15:30:13","18 / 20","Florencia Prediger","La Sante Gran Ferrari","Apv","a","c","b","a","c","b","a","b","d","a","GRAN FERRARI","2"],
+["10/6/2026 16:06:30","20 / 20","Natalia Rainoldi","La Sante Patricios","Apv","a","c","b","c","c","b","a","b","d","a","MS PATRICIOS","2"],
+["11/6/2026 10:40:55","20 / 20","Oswaldo Saldivia","Las Heras","Gerente de tienda","a","c","b","c","c","b","a","b","d","a","LAS HERAS","2"],
+["11/6/2026 11:30:51","18 / 20","Candela Feijoo","Las heras","APV","a","c","b","c","b","b","a","b","d","a","LAS HERAS","2"],
+["9/6/2026 12:04:07","20 / 20","Jeancarlos Rodriguez","Lupo","Apv Senior","a","c","b","c","c","b","a","b","d","a","LUPO","2"],
+["9/6/2026 12:31:24","18 / 20","Karina Monzo","Lupo","Senior","a","c","b","d","c","b","a","b","d","a","LUPO","2"],
+["9/6/2026 15:10:41","20 / 20","Martinez Flavia","Lupo","Apv","a","c","b","c","c","b","a","b","d","a","LUPO","2"],
+["9/6/2026 15:11:08","12 / 20","Anabella Carrasco","Lupo","APV","b","a","b","b","b","b","a","b","d","a","LUPO","2"],
+["9/6/2026 15:12:54","12 / 20","Deborah Ramos","Lupo","APV","b","b","b","c","b","b","c","b","d","a","LUPO","2"],
+["10/6/2026 9:19:20","18 / 20","Gabriela Manzol","Mark","Dermoconsejera","a","c","b","c","c","b","b","b","d","a","MARK","3"],
+["10/6/2026 9:19:30","20 / 20","Mariel Pellegrini","Mark","Apv especializada","a","c","b","c","c","b","a","b","d","a","MARK","3"],
+["10/6/2026 13:08:57","18 / 20","Julye Rojas","Mark","Apv senior","b","c","b","c","c","b","a","b","d","a","MARK","3"],
+["11/6/2026 10:57:57","20 / 20","Roberto Szkutnik","Neres","DT","a","c","b","c","c","b","a","b","d","a","NERES","2"],
+["9/6/2026 15:08:54","18 / 20","Alexander Aparcedo","Oh buenos Aires","Apv","a","c","b","a","c","b","a","b","d","a","OH BUENOS AIRES","2"],
+["10/6/2026 13:06:27","18 / 20","Cristian Diaz","Olivos","Gerente de tienda","a","c","b","c","a","b","a","b","d","a","OLIVOS","3"],
+["10/6/2026 13:10:24","18 / 20","Alejo Pargament","Olivos","Apv","a","c","a","c","c","b","a","b","d","a","OLIVOS","3"],
+["18/6/2026 10:18:08","20 / 20","Melody Farfan","Parque Chacabuco","APV","a","c","b","c","c","b","a","b","d","a","PARQUE CHACABUCO","3"],
+["10/6/2026 16:07:51","18 / 20","Emmanuel Di Paola","Patricios","Apv senior","a","b","b","c","c","b","a","b","d","a","MS PATRICIOS","2"],
+["10/6/2026 16:15:17","18 / 20","Claudio Ruiz Diaz","Patricios","Apv","a","c","b","c","c","b","a","b","d","d","MS PATRICIOS","2"],
+["10/6/2026 14:52:19","14 / 20","Camila Melo","Patricios","Apv","a","c","b","a","c","b","b","b","a","a","MS PATRICIOS","2"],
+["10/6/2026 14:55:39","18 / 20","Lautaro Batista","Patricios","Apv","a","c","b","c","c","b","b","b","d","a","MS PATRICIOS","2"],
+["10/6/2026 15:04:55","20 / 20","Alejandra Sierra","Patricios","Apv","a","c","b","c","c","b","a","b","d","a","MS PATRICIOS","2"],
+["10/6/2026 16:07:22","20 / 20","Antonella Caballero","Patricios","Apv","a","c","b","c","c","b","a","b","d","a","MS PATRICIOS","2"],
+["17/6/2026 15:26:57","20 / 20","Manuel Alejandro","Perdriel","Apv","a","c","b","c","c","b","a","b","d","a","PERDRIEL","2"],
+["17/6/2026 15:17:16","18 / 20","Nicolas Zavala","Perdriel","Asistente piso ventas","a","c","b","d","c","b","a","b","d","a","PERDRIEL","2"],
+["11/6/2026 11:35:05","18 / 20","Katherine Martinez","Perdriel","APV","a","c","b","c","b","b","a","b","d","a","PERDRIEL","2"],
+["17/6/2026 15:15:53","20 / 20","Mayra Arriola","Perdriel","Gerente","a","c","b","c","c","b","a","b","d","a","PERDRIEL","2"],
+["17/6/2026 15:18:18","6 / 20","Manuel Alejandro","Perdriel","Apv","b","d","a","d","b","b","b","b","d","d","PERDRIEL","2"],
+["17/6/2026 15:18:36","12 / 20","Edgar Diaz","Perdriel","Apv Senior","c","c","b","d","a","b","a","b","d","d","PERDRIEL","2"],
+["17/6/2026 15:26:40","18 / 20","Edgar Diaz","Perdriel","Apv Senior","a","c","b","c","c","a","a","b","d","a","PERDRIEL","2"],
+["11/6/2026 18:02:31","20 / 20","Sara Zallocco","Podium Juncal","Dermo","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
+["11/6/2026 18:02:47","20 / 20","Samuel Castillo","Podium Juncal","Gerente","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
+["11/6/2026 14:54:06","20 / 20","Federico Ferreyra","Quinta 46","Apv sr","a","c","b","c","c","b","a","b","d","a","QUINTA 46","1"],
+["16/6/2026 15:17:35","16 / 20","Ailen Vergara","Quinta 46","Apv","b","c","b","c","a","b","a","b","d","a","QUINTA 46","1"],
+["16/6/2026 15:18:18","16 / 20","Kellys Marchan","Quinta 46","Apv","b","c","b","c","a","b","a","b","d","a","QUINTA 46","1"],
+["16/6/2026 15:18:40","14 / 20","Micaela Cruz","Quinta 46","Apv sr","b","c","b","a","a","b","a","b","d","a","QUINTA 46","1"],
+["16/6/2026 15:19:23","16 / 20","Paola Villoldo","Quinta46","Apv","b","c","b","c","a","b","a","b","d","a","QUINTA 46","1"],
+["11/6/2026 16:04:14","16 / 20","Gustavo Henriquez","Rivadavia","Gerente de tienda","a","c","b","d","b","b","a","b","d","a","RIVADAVIA","3"],
+["11/6/2026 16:02:55","16 / 20","Andrea Valerio","Rivadavia","Dermo","a","c","a","c","c","b","b","b","d","a","RIVADAVIA","3"],
+["11/6/2026 16:03:00","18 / 20","Cyntia Diaz","Rivadavia","Apv senior","a","c","b","c","c","b","c","b","d","a","RIVADAVIA","3"],
+["11/6/2026 16:03:25","14 / 20","Marcelo Giles","Rivadavia","APV mostrador","b","b","b","c","c","b","a","b","c","a","RIVADAVIA","3"],
+["10/6/2026 13:08:18","14 / 20","Veronica Mansilla","RIVADAVIA 5892","APV","a","c","b","c","b","b","b","b","c","a","RIVADAVIA","3"],
+["11/6/2026 11:40:06","18 / 20","Marco Pinto","Salguero","Apv","a","a","b","c","c","b","a","b","d","a","ALCORTA","2"],
+["12/6/2026 9:51:25","20 / 20","Mariela Gonzalez","San martin","Supervisor","a","c","b","c","c","b","a","b","d","a","SM CENTER","3"],
+["12/6/2026 12:43:04","18 / 20","Claudia Ferraro","San martin center","Dermo","a","c","b","c","c","b","c","b","d","a","SM CENTER","3"],
+["12/6/2026 10:00:51","18 / 20","Pablo Delgado","San Martin center","Empleado farmacia","a","c","b","c","c","b","b","b","d","a","SM CENTER","3"],
+["12/6/2026 9:50:22","16 / 20","Marcelo Vassallo","San Martin Center","Farmaceutico","b","c","d","c","c","b","a","b","d","a","SM CENTER","3"],
+["12/6/2026 9:55:12","18 / 20","Ivan Perez","San Martin Center","Apv","a","c","b","c","a","b","a","b","d","a","SM CENTER","3"],
+["12/6/2026 12:40:07","20 / 20","Ariel Anerot","SAN MARTIN CENTER","Apv senior","a","c","b","c","c","b","a","b","d","a","SM CENTER","3"],
+["12/6/2026 12:42:00","18 / 20","Nahuel Rolon","San Martin Center","Apv","a","b","b","c","c","b","a","b","d","a","SM CENTER","3"],
+["12/6/2026 9:52:06","20 / 20","Alejandro Diaz","San Martin Center","Senior","a","c","b","c","c","b","a","b","d","a","SM CENTER","3"],
+["11/6/2026 14:51:25","18 / 20","Franco Castañares","Sanfar","Apv senior","a","c","c","c","c","b","a","b","d","a","SANFAR","1"],
+["11/6/2026 14:52:42","14 / 20","Leonardo D'Alloro","Sanfar","Director Tecnico","a","c","d","c","d","b","a","a","d","a","SANFAR","1"],
+["11/6/2026 14:56:41","20 / 20","Roxana Ledesma","Sanfar","APV SENIOR","a","c","b","c","c","b","a","b","d","a","SANFAR","1"],
+["10/6/2026 13:14:51","16 / 20","Brenda Lopez","Scalabrini","apv mostrador","b","c","b","c","b","b","a","b","d","a","SCALABRINI","3"],
+["11/6/2026 14:54:12","18 / 20","Yanett Gonzalez","Soria","Gerente","c","c","b","c","c","b","a","b","d","a","SORIA","1"],
+["10/6/2026 13:08:08","14 / 20","Milena Corona","Vassallo olivos","Dermo","b","c","d","c","b","b","a","b","d","a","OLIVOS","3"],
+["11/6/2026 14:52:58","12 / 20","Sabrina Orellana","Vassallo san isidro","Apv","b","c","b","d","d","b","c","b","d","a","SAN ISIDRO","1"],
+["11/6/2026 13:27:40","20 / 20","Patricia Palacios","Vassallo V Del Parque 2","Colaboradora","a","c","b","c","c","b","a","b","d","a","VILLA DEL PARQUE","3"],
+["11/6/2026 13:26:15","16 / 20","Carla Perazzo","Vassallo Villa del parque 2","Colaborador","c","c","b","c","c","b","c","b","d","a","VILLA DEL PARQUE","3"],
+["11/6/2026 10:41:01","20 / 20","Helen Afanador","Villa del parque","Gerente de tienda","a","c","b","c","c","b","a","b","d","a","DEVOTO","3"],
+["10/6/2026 13:12:59","16 / 20","Monica Salvatierra","Villa del parque 2","Senior","b","c","d","c","c","b","a","b","d","a","VILLA DEL PARQUE","3"],
+["11/6/2026 13:27:46","20 / 20","Claudia Truffer","Villa del Parque 2","Mostrador","a","c","b","c","c","b","a","b","d","a","VILLA DEL PARQUE","3"],
+["11/6/2026 13:26:42","18 / 20","Agustin Salinas","villa del parque 2","Apv senior","a","c","b","c","a","b","a","b","d","a","VILLA DEL PARQUE","3"],
+["11/6/2026 13:27:11","18 / 20","Sandra Hernandez","Villa del Parque II","Dermo","a","c","b","c","a","b","a","b","d","a","VILLA DEL PARQUE","3"],
+["16/6/2026 15:16:31","16 / 20","Yoana Sager","Quinta 46 DT","DT","a","c","b","a","a","b","a","b","d","a","QUINTA 46","1"],
+["18/6/2026 11:49:54","20 / 20","Monica Noguera","JUNCAL PODIUM","Apv","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"],
+["18/6/2026 11:49:58","20 / 20","Milena Cerda","JUNCAL PODIUM","Selectiva perfumeria","a","c","b","c","c","b","a","b","d","a","JUNCAL PODIUM","2"]
+];
+
+// Nómina simplificada: [nombre, tienda, cargo, area]
+const NOM_DATA = [
+["GUSTAVO AGUIRRE","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["SILVIA CHAVEZ","CABALLITO","ASESORA DERMO",2],
+["ALEJANDRO DIAZ","SM CENTER","APV SENIOR",3],
+["MARIA CECILIA SANTINI","ALESEL","DIRECTOR TECNICO",1],
+["MARIANO NOVARIN","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["FERNANDA LLANOS","LA NOBLEZA","ASISTENTE DE PISO DE VENTAS",3],
+["VERONICA FERNANDEZ","ALESEL","FARMACEUTICO AUXILIAR",1],
+["ARIEL ANEROT","SM CENTER","APV SENIOR",3],
+["GABRIELA MONTES DE OCA","JUNCAL PODIUM","ASISTENTE DE PISO DE VENTAS",2],
+["CLAUDIA SOLEDAD DIAZ OTAÑEZ","OLLEROS","DIRECTOR TECNICO",3],
+["MIRYAN TAPIA","OLLEROS","FARMACEUTICO AUXILIAR",3],
+["CECILIA BORRELLI","CABALLITO","APV SENIOR",2],
+["CLAUDIA AREVALO","JUNCAL PODIUM","APV SENIOR",2],
+["MARIELA GONZALEZ","SM CENTER","APV SENIOR",3],
+["VANESA GONZALEZ","SANFAR","ASISTENTE DE PISO DE VENTAS",1],
+["SANDRA PAOLINI","LA NOBLEZA","ASISTENTE DE PISO DE VENTAS",3],
+["ANALIA VARONE","CABALLITO","APV SENIOR",2],
+["ALMA BRUNO","DEVOTO","ASESORA DE BELLEZA",3],
+["SANDRA HERNANDEZ","VILLA DEL PARQUE","ASESORA DERMO",3],
+["CLAUDIA TRUFFER","VILLA DEL PARQUE","ASISTENTE DE PISO DE VENTAS",3],
+["KEILYN BONILLA","COLECTORA","FARMACEUTICO AUXILIAR",1],
+["CRISTIAN ORDONEZ","OLIVOS","APV SENIOR",3],
+["MARITZA SABINO","COLECTORA","FARMACEUTICO AUXILIAR",1],
+["DANIELA SINATRA","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["PATRICIA PALACIOS","VILLA DEL PARQUE","ASISTENTE DE PISO DE VENTAS",3],
+["BALARAM MORANTE","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["FLAVIO TERRACCIANO","NERES","ASISTENTE DE PISO DE VENTAS",2],
+["MONICA SALVATIERRA","VILLA DEL PARQUE","APV SENIOR",3],
+["SUSANA ZANCA","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["KARINA PUTIGNANO","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["LUCAS RIVERO","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["YESSIKA SANTOS","BOTANICO","DIRECTOR TECNICO",3],
+["AGUSTIN PEREYRA","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["VALERIA TAPPIE","ESPER","ASISTENTE DE PISO DE VENTAS",1],
+["ROBERTO SZKUTNIK","NERES","DIRECTOR TECNICO",2],
+["MIRIAN LUNA","VILLA DEL PARQUE","LIMPIEZA",3],
+["SABRINA ORELLANA","SAN ISIDRO","APV SENIOR",1],
+["DELFINA ORDUNA","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["LETICIA FERNANDEZ","GRAN FERRARI","DIRECTOR TECNICO",2],
+["OSCAR SPOLTORE","CABALLITO","DIRECTOR TECNICO",2],
+["ROXANA LEDESMA","SANFAR","APV SENIOR",1],
+["ANDREA FLORES","SAN ISIDRO","ASESORA DERMO",1],
+["JOSEFINA YOUNG","VILLA DEL PARQUE","DOMICILIARIO",3],
+["AGUSTIN SALINAS","VILLA DEL PARQUE","APV SENIOR",3],
+["FERNANDA ACOSTA","SAN ISIDRO","APV SENIOR",1],
+["ANGELYN MANZO","IGLESIA","DIRECTOR TECNICO",1],
+["FLORENCIA PERALTA","VILLA DEL PARQUE","ASISTENTE DE PISO DE VENTAS",3],
+["LORENA ARRIETA","LA NOBLEZA","APV SENIOR",3],
+["GISELA BONAZZOLA","OLIVOS","ASESORA DERMO",3],
+["DOLORES VALDES","ALESEL","SECRETARIA",1],
+["NICOLAS ZAVALA","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["PRISCILA MELO","DEVOTO","APV SENIOR",3],
+["LAURA KAPLAN","SCALABRINI","FARMACEUTICO",3],
+["VALERIA SOSA","CABALLITO","LIMPIEZA",2],
+["MILAGROS GARCIA","DEVOTO","APV SENIOR",3],
+["MARIA DELLA","RIVADAVIA","ASISTENTE DE PISO DE VENTAS",3],
+["CLAUDIO RUIZ DIAZ","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["ROSALIA BURGOS","LAS HERAS","APV SENIOR",2],
+["KATHERINE MARTINEZ","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["BARBARA FRESCO","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["PAMELA ESCOBAR","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["YAJAIRA URDANETA","KM 47.5","GERENTE DE TIENDA",1],
+["MARIBEL MILLAN","JUNCAL PODIUM","ASESORA DERMO",2],
+["CLAUDIO GERALDE","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["PAMELA ENRIQUE","JUNCAL PODIUM","ASESORA DERMO",2],
+["LORENA DOMINGUEZ","LA NOBLEZA","ASISTENTE DE PISO DE VENTAS",3],
+["MARCELA GODOY","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["MAYRA GANAM","OLLEROS","APV SENIOR",3],
+["GABRIELA IACONIS","ALCORTA","APV SENIOR",2],
+["MICAELA VILLEGAS","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["RICHARD MEDIANA","WALKER","APV SENIOR",1],
+["STEFANIA BECKER","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["NATALIA SCHEFER","KM 47.5","DIRECTOR TECNICO",1],
+["JOSE COLOMBO","OLIVOS","CHOFER",3],
+["ALICIA FERRARI","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["PAULA BRAVO","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["DIEGO ORTA","FLOTANTES ÁREA 2","GERENTE DE TIENDA",2],
+["NAHUEL ROLON","SM CENTER","ASISTENTE DE PISO DE VENTAS",3],
+["HORACIO MARTINEZ","SCALABRINI","APV SENIOR",3],
+["EUGENIA PEREZ","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["KARINA MONZO","OH BUENOS AIRES","APV SENIOR",2],
+["CYNTHIA DIAZ","RIVADAVIA","APV SENIOR",3],
+["LUIS TORO","BOTANICO","APV SENIOR",3],
+["MATIAS ALBA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["FEDERICO FERREYRA","QUINTA 46","APV SENIOR",1],
+["CHRISTIAN MANCUSO","LA NOBLEZA","DIRECTOR TECNICO",3],
+["MICHEL TAVELLA","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["NOELIA DOMINGUEZ","COLECTORA","ASESORA DE BELLEZA",1],
+["MILENA CORONA","OLIVOS","ASESORA DERMO",3],
+["CAROLINA FERNANDEZ","MARK","APV SENIOR",3],
+["FABIANA VALLEJOS","OH BUENOS AIRES","DIRECTOR TECNICO",2],
+["CARLOS RODRIGUEZ","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["MONICA NOGUERA","JUNCAL PODIUM","ASISTENTE DE PISO DE VENTAS",2],
+["NEHUEN PELAYES","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["DEILDRE BARROSO","MARK","DIRECTOR TECNICO",3],
+["SERGIO BORDON","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["SANTIAGO AGUIRRE","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["AGUSTINA AIROLDI","ALESEL","APV SENIOR",1],
+["RUTH APARICIO","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["ELIANA CORONEL","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["AIME MIRANDA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["LEIDY PARDO","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["HEIMAR MARTINEZ","SORIA","APV SENIOR",1],
+["IVAN PEREZ","SM CENTER","ASISTENTE DE PISO DE VENTAS",3],
+["MELISA GONZALEZ","SANFAR","ASISTENTE DE PISO DE VENTAS",1],
+["LORENA RUVIERA","KM 47.5","SUBGERENTE DE TIENDA",1],
+["PATRICIA FALCON","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["FACUNDO MIGLIO","LAS HERAS","FARMA AUX.",2],
+["FEDERICO GARCETE","OH BUENOS AIRES","ASISTENTE DE PISO DE VENTAS",2],
+["MARIEL PELLEGRINI","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["CLAUDIA BARRERA","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["LAUTARO BATISTA","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["SANTIAGO BUSTOS","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["ROCIO BARRIENTOS","RIVADAVIA","ASISTENTE DE PISO DE VENTAS",3],
+["ANABELLA FALAVIGNA","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["NATALIA BERRONDO","SORIA","ASESORA DE BELLEZA",1],
+["PABLO DELGADO","SM CENTER","ASISTENTE DE PISO DE VENTAS",3],
+["BRENDA LOPEZ","SCALABRINI","ASISTENTE DE PISO DE VENTAS",3],
+["JHONATHAN JARAMILLO","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["ENZO PEGA","PERDRIEL","FARMACEUTICO AUXILIAR",2],
+["YESICA AGUIRRE","GRAN FERRARI","APV SENIOR",2],
+["FRANCO CASTAÑARES","SANFAR","APV SENIOR",1],
+["ALEJANDRO MARIN","SORIA","APV SENIOR",1],
+["EMMANUEL DI PAOLA","MS PATRICIOS","APV SENIOR",2],
+["LUCIANA BRITOS","KM 47.5","ASESORA DE BELLEZA",1],
+["DANIELA SILVA","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["FLORENCIA MEZA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["MARY SAAVEDRA","RIVADAVIA","ASISTENTE DE PISO DE VENTAS",3],
+["DIEGO RODRIGUEZ","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["CAROLINA BENITEZ","JUNCAL PODIUM","ASISTENTE DE PISO DE VENTAS",2],
+["CAMILA MOLINA","LAS HERAS","APV SENIOR",2],
+["JULIA BARRIOS","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["JEANCARLOS RODRIGUEZ","OH BUENOS AIRES","APV SENIOR",2],
+["JONATHAN DIAZ","MS PATRICIOS","FARMACEUTICO AUXILIAR",2],
+["LEANDRO MITRE","KM 47.5","APV SENIOR",1],
+["MICHELLE HEIDENRREICH","QUINTA 46","ASISTENTE DE PISO DE VENTAS",1],
+["ARACELI CRUZ","QUINTA 46","APV SENIOR",1],
+["ERIK LEONHARDT","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["NATALIA CASTILLO","OLIVOS","APV SENIOR",3],
+["GUSTAVO HENRIQUEZ","RIVADAVIA","GERENTE DE TIENDA",3],
+["VIRGINIA COLOMBI","IGLESIA","APV SENIOR",1],
+["NAHIR ALEGRIA","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["ENZO ACOSTA","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["MARIA DEMELLI","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["TELMO BUFI","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["JIMENA RAMIREZ","ALCORTA","APV SENIOR",2],
+["IRIS MONTIEL","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["EYLEN MORENO","SORIA","ASESORA DERMO",1],
+["FERNANDA PIÑEIRO","VILLA DEL PARQUE","ASESORA DERMO",3],
+["NATALI ROMERO","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["MICAELA AVALOS","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["YANINA FORTUNATO","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["MICAELA CAMPODONICO","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["AYELEN CRIPPA","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["SOFIA BERTRAN","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["ROSARIO TULA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["JOSE BIGLIA","LAS HERAS","FARMACEUTICO AUXILIAR",2],
+["YANINA NAVARRO","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["SOFIA VEINTEMILLA","QUINTA 46","ASISTENTE DE PISO DE VENTAS",1],
+["JOSEANNY CUICAS","COLECTORA","APV SENIOR",1],
+["RAQUEL ARANDA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["FREDY GUTIERREZ","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["TAMARA MONTT","ALCORTA","ASESORA DERMO",2],
+["CORINA FRANCO","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["WANDA SOSA","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["BARBARA PREDIGER","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["GENESIS OJEDA","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["PATRICIA FABIAN","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["SILVIA ROJAS","RIVADAVIA","APV SENIOR",3],
+["MARIA MONTES DE OCA","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["BRENDA ARCE","NERES","ASISTENTE DE PISO DE VENTAS",2],
+["JOHANA OVIEDO","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["ALEJANDRA SIERRA","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["LUCAS ROCHA","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["DANIELA CAICEDO","IGLESIA","APV SENIOR",1],
+["JOANA ENRIQUEZ","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["VICTORIA MELGAREJO","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["FIORELLA OSMAN","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["CANDELARIA MONTENEGRO","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["NOEMI BIALOSTOCKY","OLIVOS","DIRECTOR TECNICO",3],
+["ERICA KOMKE","OLIVOS","FARMACEUTICO AUXILIAR",3],
+["YANETT GONZALEZ","SORIA","GERENTE DE TIENDA",1],
+["GABRIELA CRISCI","RIVADAVIA","FARMACEUTICO AUXILIAR",3],
+["MANUEL LEGUIZAMON","PERDRIEL","ASISTENTE DE PISO DE VENTAS",2],
+["JULYE ROJAS","MARK","APV SENIOR",3],
+["SILVIA NARANJO","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["VANESA GOMEZ","PERDRIEL","ASESORA DERMO",2],
+["YOANA SAGER","QUINTA 46","DIRECTOR TECNICO",1],
+["MICAELA RIVELA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["RAQUEL LA TORRE","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["HELEN AFANADOR","DEVOTO","GERENTE DE TIENDA",3],
+["GUILLERMO DULCE","KM 47.5","GERENTE DE TIENDA",1],
+["CAMILA MELO","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["YESSICA LUQUE","WALKER","APV SENIOR",1],
+["WALTER ROMERO","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["CRISTIAN DIAZ","OLIVOS","GERENTE DE TIENDA",3],
+["NATALIA MAÑAS","RIVADAVIA","FARMACEUTICO AUXILIAR",3],
+["SOLEDAD MONTENEGRO","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["ROCIO MOSTEIRIN","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["GIANNA MULLER","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["ROCIO CARRIZO","LA NOBLEZA","APV SENIOR",3],
+["ZOILA CASTRO","SCALABRINI","ASISTENTE DE PISO DE VENTAS",3],
+["ANABELLA CORDICH","SCALABRINI","FARMACEUTICO AUXILIAR",3],
+["CANDELA SALVATIERRA","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["ANABELLA ACOSTA","GRAN FERRARI","ASESORA DERMO",2],
+["ROYNER MONTIEL","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["VANESSA MEDIN","SAN ISIDRO","FARMACEUTICO AUXILIAR",1],
+["SAMANTA RIVERO","GRAN FERRARI","APV SENIOR",2],
+["SABRINA ANDRADA","LA NOBLEZA","ASISTENTE DE PISO DE VENTAS",3],
+["JULIETA MATEOS","IGLESIA","ASESORA DERMO",1],
+["ANTONELLA CABALLERO","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["YESICA TORRES","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["SERENA AYBAR","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["LUCAS GOMEZ","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["OCTAVIO VIDAL","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["MARIA MILLACAHUIN","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["CLAUDIA FERRARO","SM CENTER","ASESORA DERMO",3],
+["ANABELLA CARRASCO","OH BUENOS AIRES","ASISTENTE DE PISO DE VENTAS",2],
+["OLGA LIMA","SAN ISIDRO","FARMACEUTICO AUXILIAR",1],
+["LEONARDO D'ALLORO","SANFAR","FARMACEUTICO AUXILIAR",1],
+["CARLA PRUNESTI","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["SOFIA CHANTIRE","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["EZEQUIEL MENDI","NERES","ASISTENTE DE PISO DE VENTAS",2],
+["NICOLAS GOMEZ","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["ANGEL RIVERO","OLLEROS","ASISTENTE DE PISO DE VENTAS",3],
+["FACUNDO GONZALEZ","ALESEL","APV SENIOR",1],
+["VICTOR GONZALEZ","SAN ISIDRO","ASISTENTE DE PISO DE VENTAS",1],
+["MILENA CERDA","JUNCAL PODIUM","ASESORA DERMO",2],
+["KATIUSKA MEZA","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["SCARLET GORRIN","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["ANA ANTURY","OLLEROS","GERENTE DE TIENDA",3],
+["SASHA GRANUZZO","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["CARLA PERAZZO","VILLA DEL PARQUE","ASISTENTE DE PISO DE VENTAS",3],
+["KAREN BRICENO","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["MARIA BELLO","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["VERONICA SEGAL","NERES","ASISTENTE DE PISO DE VENTAS",2],
+["MARCELO VASSALLO","SM CENTER","FARMACEUTICO AUXILIAR",3],
+["SHAIEL GRANDI","SM CENTER","ASESORA DE BELLEZA",3],
+["EDGAR DIAZ","PERDRIEL","APV SENIOR",2],
+["CECILIA SORIA","SORIA","DIRECTOR TECNICO",1],
+["PAOLA ORDONEZ","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["WILLIAN MIERS","DEVOTO","ASISTENTE DE PISO DE VENTAS",3],
+["JUAN GONZALEZ","ALESEL","APV SENIOR",1],
+["OSWALDO SALDIVIA","LAS HERAS","GERENTE DE TIENDA",2],
+["SARA ZALLOCO","JUNCAL PODIUM","ASESORA DERMO",2],
+["VERONICA ONO","JUNCAL PODIUM","ASISTENTE DE PISO DE VENTAS",2],
+["ELENA VALDERRAMA","SAN ISIDRO","ASISTENTE DE PISO DE VENTAS",1],
+["JAQUELINE NEGROND","SAN ISIDRO","DOMICILIARIO",1],
+["MAITE OREGAEN","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["DAIANA LIVOLSINI","COLECTORA","APV SENIOR",1],
+["MARTIN MARTINEZ","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["KEVIN INSIGNARES","BOTANICO","APV SENIOR",3],
+["LUJAN KUNZI","OLLEROS","ASISTENTE DE PISO DE VENTAS",3],
+["CAMILA AGUIRRE","SAN ISIDRO","ASISTENTE DE PISO DE VENTAS",1],
+["ARYAM HURTADO","JUNCAL PODIUM","ASISTENTE DE PISO DE VENTAS",2],
+["ARNALDO ROJAS","SAN ISIDRO","ASISTENTE DE PISO DE VENTAS",1],
+["NATALIA RAINOLDI","MS PATRICIOS","ASISTENTE DE PISO DE VENTAS",2],
+["MELISA BRIZUELA","BOTANICO","APV SENIOR",3],
+["DAIANA RODRIGUEZ","VILLA DEL PARQUE","ASISTENTE DE PISO DE VENTAS",3],
+["ALFREDO SULBARAN","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["CAMILA CASTRO","SAN ISIDRO","ASESORA DERMO",1],
+["PRISCILA LIZAGARRA","ALESEL","ASESORA DERMO",1],
+["MELINA FRANCO","LAS HERAS","ASESORA DERMO",2],
+["EDGAR ZORRILLA","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["ELBA MARTINEZ","ALCORTA","ASISTENTE DE PISO DE VENTAS",2],
+["CARLOS CARRION","NERES","GERENTE DE TIENDA",2],
+["MARCELA BENITEZ","JUNCAL PODIUM","ASISTENTE DE PISO DE VENTAS",2],
+["MELANIE LAGO","KM 47.5","ASISTENTE DE PISO DE VENTAS",1],
+["CRISTIAN MUNNO","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["MELANIE BENITEZ","OLLEROS","ASISTENTE DE PISO DE VENTAS",3],
+["LUCY VILLA","LAS HERAS","ASESORA DE BELLEZA",2],
+["JEANCARLOS RODRIGUEZ","OH BUENOS AIRES","APV SENIOR",2],
+["PAMELA CENTURION","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["KEYLA URBINA","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["FACUNDO RODRIGUEZ","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["FLORENCIA PINTOS","SCALABRINI","ASISTENTE DE PISO DE VENTAS",3],
+["MELODY FARFAN","PARQUE CHACABUCO","ASISTENTE DE PISO DE VENTAS",3],
+["SOFIA ESPINOZA","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["CELESTE LIMA","QUINTA 46","ASESORA DE BELLEZA",1],
+["PAOLA VILLOLDO","QUINTA 46","ASISTENTE DE PISO DE VENTAS",1],
+["ANA MENSA","SORIA","FARMACEUTICO AUXILIAR",1],
+["MAYRA ARRIOLA","PERDRIEL","GERENTE DE TIENDA",2],
+["DEBORAH RAMOS","LUPO","ASISTENTE DE PISO DE VENTAS",2],
+["RODRIGO BENITEZ","SCALABRINI","APV SENIOR",3],
+["MARIA SITTNER","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["AZUL KODALLE","IGLESIA","ASESORA DE BELLEZA",1],
+["CARLA GOMEZ","FLOTANTES ÁREA 2","ASISTENTE DE PISO DE VENTAS",2],
+["MILCA PEREZ","FLOTANTES ÁREA 2","ASISTENTE DE PISO DE VENTAS",2],
+["GABRIELA MANZOL","MARK","ASESORA DERMO",3],
+["TAMARA LOPEZ","IGLESIA","ASISTENTE DE PISO DE VENTAS",1],
+["YANINA RODRIGUEZ","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["FIORELLA AGUIRRE","ALCORTA","ASESORA DE BELLEZA",2],
+["CAMILA MANSILLA","BOTANICO","ASESORA DE BELLEZA",3],
+["KELLYS MARCHAN","FLOTANTES ÁREA 2","ASISTENTE DE PISO DE VENTAS",2],
+["RUCIELA MORALES","GRAN FERRARI","ASISTENTE DE PISO DE VENTAS",2],
+["DEBORA MANSILLA","RIVADAVIA","ASISTENTE DE PISO DE VENTAS",3],
+["VERONICA GRUPPI","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["YECKSON RIVAS","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["ANDREA TRINIDAD","VILLA DEL PARQUE","FARMACEUTICO AUXILIAR",3],
+["ALEJO PARGAMENT","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["JOSE MANRIQUEZ","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["TOMAS CABRERA","PERDRIEL","APV SENIOR",2],
+["MARCELO GILES","RIVADAVIA","ASISTENTE DE PISO DE VENTAS",3],
+["DIANA CARPIO","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["DANIEL CONTRERAS","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["MELINA PENARANDA","OLLEROS","ASESORA DE BELLEZA",3],
+["JUAN LUNA","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["ALAN BERON","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["JEANY GONZALEZ","QUINTA 46","ASESORA DE BELLEZA",1],
+["CELESTE MAMMANA","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["LUDMILA LOPEZ","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["YENY SERVIAN","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["IVANOVA RANGEL","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["AGUSTIN MENDOZA","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["MILENA KIMMEL","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["VANESSA GUERRA","OLLEROS","ASISTENTE DE PISO DE VENTAS",3],
+["MARCO PINTO","ALCORTA","ASISTENTE DE PISO DE VENTAS",2],
+["JOSELIN DOMINGUEZ","QUINTA 46","APV SENIOR",1],
+["EZEQUIEL DOMINGUEZ","ALCORTA","ASISTENTE DE PISO DE VENTAS",2],
+["VICTOR BARON","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["MARTINA BABENCO","QUINTA 46","ASESORA DERMO",1],
+["JULIETA ARRIBAS","VILLA DEL PARQUE","FARMACEUTICO AUXILIAR",3],
+["EMILCE RAJOY","WALKER","FARMACEUTICO AUXILIAR",1],
+["ARACELI FLORES","FLOTANTES ÁREA 2","ASISTENTE DE PISO DE VENTAS",2],
+["OMAR GOMEZ","FLOTANTES ÁREA 2","GERENTE DE TIENDA",2],
+["ALEXANDER APARCEDO","OH BUENOS AIRES","ASISTENTE DE PISO DE VENTAS",2],
+["GRACE MEDINA","SAN ISIDRO","ASISTENTE DE PISO DE VENTAS",1],
+["MARIELA FLORES","ESPER","ASISTENTE DE PISO DE VENTAS",1],
+["YAMILA CABRAL","PERDRIEL","ASESORA DERMO",2],
+["SHEILA DIAZ","SORIA","ASISTENTE DE PISO DE VENTAS",1],
+["FLAVIA MARTINEZ","OH BUENOS AIRES","ASISTENTE DE PISO DE VENTAS",2],
+["LEONARDO GARNICA","SAN ISIDRO","ASISTENTE DE PISO DE VENTAS",1],
+["WILSON TREJO","OLLEROS","GERENTE DE TIENDA",3],
+["ELIZABETH PANDURO","BOTANICO","ASISTENTE DE PISO DE VENTAS",3],
+["DIAMELA BARRIOS","JUNCAL PODIUM","ASESORA DERMO",2],
+["DENISE LEAL","RIVADAVIA","ASESORA DERMO",3],
+["IVANA GONZALEZ","ALESEL","ASISTENTE DE PISO DE VENTAS",1],
+["CELESTE BOIXADOS","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["CANDELA FEIJOO","LAS HERAS","ASISTENTE DE PISO DE VENTAS",2],
+["VANINA CAPUTO","MARK","ASESORA DE BELLEZA",3],
+["DARWIN CORDOVA","WALKER","ASISTENTE DE PISO DE VENTAS",1],
+["LOURDES ZIMMERMANN","NERES","ASESORA DE BELLEZA",2],
+["BONY MENDOZA","FLOTANTES ÁREA 2","GERENTE DE TIENDA",2],
+["SAMUEL CASTILLO","FLOTANTES ÁREA 2","GERENTE DE TIENDA",2],
+["FLORENCIA RECALDE","WALKER","APV SENIOR",1],
+["ARIEL BRAMBILLA","OLLEROS","ASISTENTE DE PISO DE VENTAS",3],
+["MARIA CARREÑO","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["VALERIA SANCHEZ","ESPER","DIRECTOR TECNICO",1],
+["CARLOS HERNANDEZ","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["YANELA GARCIA","COLECTORA","ASISTENTE DE PISO DE VENTAS",1],
+["DANIEL GAURIS","MARK","FARMACEUTICO AUXILIAR",3],
+["NATALIA FLORES","NERES","ASISTENTE DE PISO DE VENTAS",2],
+["PATRICIA LOPEZ","PERDRIEL","APV SENIOR",2],
+["CAMILA CARRION","NERES","ASISTENTE DE PISO DE VENTAS",2],
+["EMILYS DELGADO","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["DIEGO ESTEVES","CABALLITO","ASISTENTE DE PISO DE VENTAS",2],
+["ANDREA VALERIO","RIVADAVIA","ASESORA DERMO",3],
+["GABRIEL VIDAL","LA NOBLEZA","ASISTENTE DE PISO DE VENTAS",3],
+["CANDELA GOMEZ","OLIVOS","ASISTENTE DE PISO DE VENTAS",3],
+["CANDELA BAREIRO","MARK","ASISTENTE DE PISO DE VENTAS",3],
+["JOAQUIN GONZALEZ","SM CENTER","ASISTENTE DE PISO DE VENTAS",3]
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// LÓGICA
+// ═══════════════════════════════════════════════════════════════════════
+const STORES = ['WALKER','CABALLITO','SM CENTER','ALESEL','LA NOBLEZA','JUNCAL PODIUM','OLLEROS','SANFAR','DEVOTO','VILLA DEL PARQUE','COLECTORA','OLIVOS','PERDRIEL','NERES','MARK','BOTANICO','ESPER','SAN ISIDRO','GRAN FERRARI','IGLESIA','SCALABRINI','RIVADAVIA','MS PATRICIOS','LAS HERAS','KM 47.5','ALCORTA','FLOTANTES ÁREA 2','OH BUENOS AIRES','QUINTA 46','SORIA','PARQUE CHACABUCO','LUPO'];
+// Mapa tienda→área construido de NOM_DATA (declarado aquí, después de STORES)
+const STORE_AREA = {};
+NOM_DATA.forEach(r => { if (r[1] && r[3]) STORE_AREA[r[1].toUpperCase().trim()] = +r[3]; });
+const API = 'https://script.google.com/macros/s/AKfycbwMoGhL_56BE90DbpGrV5qa1fZQgKgYF0TMZbORFAe40Vi3Jgh0f4bBBkHoGcUQR2_6/exec';
+const GID_RESP   = '1142498963';
+const GID_NOMINA = '1331171004';
+
+let cA=null, cS=null;
+let ACTIVE_AREA = 0; // 0 = todas
+
+const sc = s => { const m=String(s||'').match(/^(\d+)/); return m?+m[1]:null; };
+
+// Deduplica respuestas: por nombre+tienda, queda la de mayor nota (o la primera si empatan)
+function storeCol(r) {
+  // Buscar la tienda en todas las columnas desde la 10 en adelante
+  // primero col 15 (posición esperada), luego búsqueda completa
+  const s15 = (r[15]||'').toUpperCase().trim();
+  if (STORES.includes(s15)) return s15;
+  // Búsqueda completa hacia atrás (ignora columnas vacías al final)
+  for (let i = r.length-1; i >= 10; i--) {
+    const v = (r[i]||'').toUpperCase().trim();
+    if (STORES.includes(v)) return v;
+  }
+  // Búsqueda en primeras columnas por si acaso
+  for (let i = 0; i < Math.min(r.length, 20); i++) {
+    const v = (r[i]||'').toUpperCase().trim();
+    if (STORES.includes(v)) return v;
+  }
+  return '';
+}
+
+function areaCol(r) {
+  const a16 = parseInt(r[16])||0;
+  if (a16 >= 1 && a16 <= 3) return a16;
+  // Buscar área en cols finales
+  for (let i = r.length-1; i >= 10; i--) {
+    const v = parseInt(r[i]);
+    if (v >= 1 && v <= 3) return v;
+  }
+  return 0;
+}
+
+function dedup(resp) {
+  const map = new Map();
+  resp.forEach(r => {
+    const store = storeCol(r);
+    const nombre = (r[2]||'').trim().toUpperCase();
+    const key = nombre + '||' + store;
+    const score = sc(r[1]) ?? -1;
+    if (!map.has(key) || score > (sc(map.get(key)[1]) ?? -1)) {
+      map.set(key, r);
+    }
+  });
+  return Array.from(map.values());
+}
+
+function renderAll(rawResp, nom) {
+  const resp = dedup(rawResp);
+  const nomByStore={}, nomByArea={1:0,2:0,3:0};
+  nom.forEach(r => {
+    const s=(r[1]||'').toUpperCase().trim();
+    if(!STORES.includes(s))return;
+    nomByStore[s]=(nomByStore[s]||0)+1;
+    const a=+r[3]||0; if(a>=1&&a<=3)nomByArea[a]++;
+  });
+
+  const rByStore={}, sByStore={}, rByArea={1:[],2:[],3:[]};
+  resp.forEach(r => {
+    const s=storeCol(r);
+    if(!STORES.includes(s))return;
+    const a=areaCol(r), score=sc(r[1]);
+    rByStore[s]=(rByStore[s]||0)+1;
+    if(!sByStore[s])sByStore[s]=[];
+    if(score!==null)sByStore[s].push(score);
+    if(a>=1&&a<=3)rByArea[a].push(score);
+  });
+
+  const totN=Object.values(nomByStore).reduce((a,b)=>a+b,0);
+  const totR=Object.values(rByStore).reduce((a,b)=>a+b,0);
+  const allSc=resp.map(r=>sc(r[1])).filter(x=>x!==null);
+  const avgSc=allSc.length?(allSc.reduce((a,b)=>a+b,0)/allSc.length):null;
+  const passed=allSc.filter(s=>s>=14).length;
+  const pctP=totN>0?Math.round(totR/totN*100):0;
+  const pctPas=allSc.length?Math.round(passed/allSc.length*100):0;
+
+  const $=id=>document.getElementById(id);
+  const set=(id,v)=>{$(id).textContent=v};
+  set('m-resp',totR); set('m-resp-s',`de ${totN} en nómina`);
+  set('m-pct',pctP+'%');
+  $('m-pct').className='mv '+(pctP>=70?'green':pctP>=40?'amber':'red');
+  set('m-pct-s',`${totN-totR} pendientes`);
+  set('m-avg',avgSc!==null?avgSc.toFixed(1):'—');
+  $('m-avg').className='mv '+(avgSc>=14?'green':'amber');
+  set('m-pass',pctPas+'%');
+  set('m-pass-s',`${passed} de ${allSc.length} respondieron`);
+
+  const aL=['Área 1','Área 2','Área 3'];
+  const aPt=[1,2,3].map(a=>nomByArea[a]>0?Math.round(rByArea[a].length/nomByArea[a]*100):0);
+  const aAv=[1,2,3].map(a=>{const s=rByArea[a].filter(x=>x!==null);return s.length?parseFloat((s.reduce((x,y)=>x+y,0)/s.length).toFixed(1)):0;});
+
+  if(cA)cA.destroy(); if(cS)cS.destroy();
+
+  // Plugin inline para etiquetas sobre las barras (sin CDN extra)
+  const datalabelPlugin = {
+    id:'topLabel',
+    afterDatasetsDraw(chart) {
+      const {ctx, data} = chart;
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach((bar, i) => {
+          const val = ds.data[i];
+          if(val===null||val===undefined) return;
+          const label = ds._labelFmt ? ds._labelFmt(val) : String(val);
+          ctx.save();
+          ctx.font = 'bold 12px -apple-system,sans-serif';
+          ctx.fillStyle = '#444';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(label, bar.x, bar.y - 3);
+          ctx.restore();
+        });
+      });
+    }
+  };
+
+  cA=new Chart($('cArea'),{
+    type:'bar',
+    plugins:[datalabelPlugin],
+    data:{labels:aL,datasets:[{data:aPt,backgroundColor:['#b5d4f4','#378add','#0c447c'],borderRadius:5,label:'% Part.',_labelFmt:v=>v+'%'}]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24}},plugins:{legend:{display:false}},scales:{y:{max:110,ticks:{callback:v=>v+'%',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+  cS=new Chart($('cScore'),{
+    type:'bar',
+    plugins:[datalabelPlugin],
+    data:{labels:aL,datasets:[{data:aAv,backgroundColor:aAv.map(v=>v>=14?'#97c459':v>=10?'#ef9f27':'#f09595'),borderRadius:5,label:'Nota prom.',_labelFmt:v=>v+' pts'}]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24}},plugins:{legend:{display:false}},scales:{y:{max:22,ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+
+  $('area-tabs').innerHTML=`<button class="tab on" onclick="aF(0,this)">Todas</button>`+aL.map((l,i)=>`<button class="tab" onclick="aF(${i+1},this)">${l} — ${aPt[i]}% part.</button>`).join('');
+
+  const stTb=$('store-tb'), fsSel=$('fStore');
+  stTb.innerHTML=''; fsSel.innerHTML='<option value="">Todas las tiendas</option>';
+  STORES.forEach(s=>{
+    const n=nomByStore[s]||0, res=rByStore[s]||0, sc2=sByStore[s]||[];
+    const avg=sc2.length?(sc2.reduce((a,b)=>a+b,0)/sc2.length).toFixed(1):null;
+    const pp=sc2.length?Math.round(sc2.filter(x=>x>=14).length/sc2.length*100):null;
+    const pct=n>0?Math.round(res/n*100):0;
+    const area = STORE_AREA[s] || 0;
+    const bc=pct>=70?'bg-g':pct>=40?'bg-a':'bg-r';
+    const pc=pp===null?'pgy':pp>=70?'pg':pp>=50?'pa':'pr';
+    const tr=document.createElement('tr'); tr.dataset.area=area; tr.dataset.store=s;
+    tr.innerHTML=`<td style="font-weight:500">${s}</td><td><span class="pill pb">Área ${area||'?'}</span></td><td>${n}</td><td>${res}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><div class="bf ${bc}" style="width:${pct}%"></div></div><span style="font-size:12px;min-width:28px">${pct}%</span></div></td><td>${avg!==null?avg+' / 20':'—'}</td><td>${pp!==null?`<span class="pill ${pc}">${pp}%</span>`:'—'}</td>`;
+    stTb.appendChild(tr);
+    const o=document.createElement('option'); o.value=s; o.textContent=s; fsSel.appendChild(o);
+  });
+
+  // People
+  const seen=new Set(), pRows=[];
+  resp.forEach(r=>{
+    const s=storeCol(r);
+    if(!STORES.includes(s))return;
+    const nombre=(r[2]||'').trim(), score2=sc(r[1]);
+    seen.add(nombre.toUpperCase()+'||'+s);
+    // Fecha: tomar solo la parte de fecha (puede ser "Wed Jun 10 2026 ..." o "10/6/2026 ...")
+    const rawFecha = (r[0]||'');
+    const fechaMatch = rawFecha.match(/(\w{3} \w{3} \d{2} \d{4})|(\d{1,2}\/\d{1,2}\/\d{4})/);
+    const fecha = fechaMatch ? fechaMatch[0] : rawFecha.split(' ')[0];
+    pRows.push({nombre,store:s,cargo:(r[4]||'').trim(),score:score2,fecha,area:STORE_AREA[s]||areaCol(r),st:'r'});
+  });
+  nom.forEach(r=>{
+    const s=(r[1]||'').toUpperCase().trim(); if(!STORES.includes(s))return;
+    const nombre=(r[0]||'').trim(); if(!nombre||seen.has(nombre.toUpperCase()+'||'+s))return;
+    pRows.push({nombre,store:s,cargo:r[2]||'',score:null,fecha:'—',area:STORE_AREA[s]||+r[3]||0,st:'p'});
+  });
+
+  const ptb=$('people-tb'); ptb.innerHTML='';
+  pRows.forEach(({nombre,store,cargo,score:sc3,fecha,area,st})=>{
+    let pill,scStr;
+    if(st==='p'){pill='<span class="pill pa">Pendiente</span>';scStr='—';}
+    else if(sc3===null){pill='—';scStr='—';}
+    else if(sc3>=14){pill='<span class="pill pg">Aprobado</span>';scStr=sc3+' / 20';}
+    else{pill='<span class="pill pr">Desaprobado</span>';scStr=sc3+' / 20';}
+    const tr=document.createElement('tr');
+    tr.dataset.store=store; tr.dataset.area=area; tr.dataset.result=st==='p'?'pending':sc3>=14?'pass':'fail'; tr.dataset.name=nombre.toLowerCase();
+    tr.innerHTML=`<td style="font-weight:500">${nombre}</td><td>${store}</td><td style="color:#aaa;font-size:12px">${cargo}</td><td><span class="pill pb">Área ${area||'?'}</span></td><td>${scStr}</td><td>${pill}</td><td style="color:#bbb;font-size:12px">${fecha}</td>`;
+    ptb.appendChild(tr);
+  });
+  $('pcount').textContent=`Mostrando ${pRows.length} personas`;
+}
+
+function filterP(){
+  const srch=document.getElementById('srch').value.toLowerCase();
+  const fs=document.getElementById('fStore').value.toUpperCase();
+  const fr=document.getElementById('fResult').value;
+  let n=0;
+  document.getElementById('people-tb').querySelectorAll('tr').forEach(tr=>{
+    const okArea = !ACTIVE_AREA || tr.dataset.area == ACTIVE_AREA;
+    const ok = okArea
+      && (!srch || tr.dataset.name.includes(srch) || tr.dataset.store.toLowerCase().includes(srch))
+      && (!fs || tr.dataset.store === fs)
+      && (!fr || tr.dataset.result === fr);
+    tr.style.display=ok?'':'none'; if(ok)n++;
+  });
+  document.getElementById('pcount').textContent=`Mostrando ${n} personas`;
+}
+
+function setArea(a, btn) {
+  ACTIVE_AREA = a;
+  // Update filter bar buttons
+  document.querySelectorAll('.afbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  // Update hint
+  const hints = ['Filtra métricas, tiendas y personas','Solo tiendas y personas del Área 1','Solo tiendas y personas del Área 2','Solo tiendas y personas del Área 3'];
+  document.getElementById('area-hint').textContent = hints[a];
+  // Filter store table
+  document.getElementById('store-tb').querySelectorAll('tr').forEach(tr => {
+    tr.style.display = (!a || tr.dataset.area == a) ? '' : 'none';
+  });
+  // Reset store dropdown if selected store is not in this area
+  const fStore = document.getElementById('fStore');
+  if (fStore.value && a) {
+    const storeRows = document.getElementById('store-tb').querySelectorAll('tr');
+    let storeInArea = false;
+    storeRows.forEach(tr => {
+      if (tr.dataset.store === fStore.value && tr.dataset.area == a) storeInArea = true;
+    });
+    if (!storeInArea) fStore.value = '';
+  }
+  // Filter people table (respects existing text/store/result filters too)
+  filterP();
+  // Update charts to reflect area selection
+  updateCharts();
+}
+
+function aF(a,btn){ setArea(a,btn); }
+
+function tog(id){
+  document.getElementById('bd-'+id).classList.toggle('open');
+  document.getElementById('ch-'+id).classList.toggle('open');
+}
+
+function updateCharts() {
+  // Redraw area charts highlighting the selected area
+  if (!cA || !cS) return;
+  const a = ACTIVE_AREA;
+  // Update bar colors to highlight selected area
+  const blueBase = ['#b5d4f4','#378add','#0c447c'];
+  const blueDim   = ['#dde9f7','#9ec4ee','#6a93bc'];
+  cA.data.datasets[0].backgroundColor = blueBase.map((c,i) => (!a || i+1===a) ? c : blueDim[i]);
+  cA.update();
+  // score chart
+  const scoreData = cS.data.datasets[0].data;
+  cS.data.datasets[0].backgroundColor = scoreData.map((v,i) => {
+    if (a && i+1 !== a) return '#d9d9d9';
+    return v>=14?'#97c459':v>=10?'#ef9f27':'#f09595';
+  });
+  cS.update();
+}
+
+// ── LIVE MODE ────────────────────────────────────────────────────────
+function parseCSV(txt){
+  return txt.split('\n').map(line=>{
+    const cols=[]; let cur='',q=false;
+    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){q=!q;}else if(c===','&&!q){cols.push(cur.trim());cur='';}else cur+=c;}
+    cols.push(cur.trim()); return cols;
+  }).filter(r=>r.some(x=>x));
+}
+
+async function tryLive(){
+  const btn=document.getElementById('btn-live');
+  btn.textContent='⏳ Actualizando...'; btn.disabled=true;
+  try {
+    // Llamamos a nuestro propio Apps Script — sin CORS, sin proxies
+    const r1 = await fetch(`${API}?gid=${GID_RESP}`);
+    if(!r1.ok) throw new Error(`HTTP ${r1.status}`);
+    const txt1 = await r1.text();
+    const rawResp = parseCSV(txt1);
+    // Apps Script puede devolver fecha larga ("Wed Jun 10 2026...") y score como número puro ("14")
+    // Normalizamos para que el resto del código funcione igual
+    const resp = rawResp.slice(1).filter(r=>r[0]&&r[2]).map(r => {
+      const rr = [...r];
+      // Normalizar score: si es número puro sin " / 20", lo añadimos
+      if (rr[1] && /^\d+$/.test(rr[1].trim())) rr[1] = rr[1].trim() + ' / 20';
+      // Asegurar que col 15 = TIENDA y col 16 = AREA (buscar si no están ahí)
+      const foundStore = storeCol(rr);
+      if (foundStore && (rr[15]||'').toUpperCase().trim() !== foundStore) {
+        // Encontramos la tienda en otra columna — la ponemos en 15 y el área en 16
+        rr[15] = foundStore;
+        rr[16] = String(STORE_AREA[foundStore] || '');
+      }
+      return rr;
+    });
+
+    // Siempre usamos NOM_DATA embebida para la nómina — es la fuente más confiable
+    // El live fetch solo actualiza las respuestas
+    renderAll(resp, NOM_DATA);
+    document.getElementById('upd').textContent='En vivo — '+new Date().toLocaleString('es-AR');
+    document.getElementById('mode-badge').textContent='En vivo';
+    document.getElementById('mode-badge').style.background='#e6f1fb';
+    document.getElementById('mode-badge').style.color='#185fa5';
+    document.getElementById('info-banner').style.display='none';
+    btn.textContent='✓ Actualizado';
+    setTimeout(()=>{btn.textContent='↻ Refrescar';btn.disabled=false;},2000);
+  } catch(e) {
+    btn.textContent='↻ Refrescar'; btn.disabled=false;
+    // Fallback: show embedded data + error banner
+    renderAll(RESP_DATA, NOM_DATA);
+    document.getElementById('upd').textContent = 'Sin conexión — datos al 18/6/2026';
+    document.getElementById('mode-badge').textContent = 'Sin conexión';
+    document.getElementById('mode-badge').style.background = '#faeeda';
+    document.getElementById('mode-badge').style.color = '#854f0b';
+    document.getElementById('info-banner').style.display = 'block';
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+// Carga en vivo automáticamente al abrir la página
+// Si falla, cae al fallback con datos embebidos
+tryLive();
+</script>
+</body>
+</html>
