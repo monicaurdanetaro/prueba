@@ -54,6 +54,15 @@
   .afbtn{font-size:13px;padding:6px 16px;border-radius:20px;border:0.5px solid rgba(0,0,0,.15);cursor:pointer;background:#fff;color:#555;font-weight:400;transition:all .15s}
   .afbtn.on{background:#1a1a18;color:#fff;border-color:#1a1a18}
   .afbtn:hover:not(.on){background:#f0f0ee}
+  /* Barra global filtros */
+  .store-search-wrap{display:flex;align-items:center;gap:6px;background:#f5f5f0;border:0.5px solid rgba(0,0,0,.12);border-radius:8px;padding:5px 10px;cursor:text}
+  .store-search-wrap input::placeholder{color:#bbb}
+  .gbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#fff;border:0.5px solid rgba(0,0,0,.1);border-radius:12px;padding:12px 20px;margin-bottom:14px}
+  .gbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .gbar-label{font-size:12px;font-weight:500;color:#888;margin-right:4px}
+  .gbar-search{display:flex;align-items:center;gap:8px;background:#f5f5f0;border:0.5px solid rgba(0,0,0,.12);border-radius:8px;padding:6px 12px;min-width:200px}
+  .gbar-search input{border:none;background:transparent;outline:none;font-size:13px;color:#1a1a18;width:100%}
+  .search-icon{font-size:14px;color:#aaa}
   @media(max-width:680px){.mgrid{grid-template-columns:repeat(2,1fr)}.crow{grid-template-columns:1fr}.wrap{padding:14px}.hdr{padding:14px 16px}}
 </style>
 </head>
@@ -77,16 +86,15 @@
     ⚠️ No se pudieron cargar los datos en vivo. Mostrando datos embebidos. Intentá con <b>↻ Refrescar</b>.
   </div>
 
-  <!-- FILTRO GLOBAL DE ÁREA -->
-  <div class="area-filter-bar">
-    <span class="area-filter-label">Filtrar por área:</span>
-    <div id="area-filter-btns" style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="afbtn on" onclick="setArea(0,this)">Todas las áreas</button>
+  <!-- BARRA GLOBAL: filtro área -->
+  <div class="gbar">
+    <div class="gbar-left">
+      <span class="gbar-label">Filtrar por área:</span>
+      <button class="afbtn on" onclick="setArea(0,this)">Todas</button>
       <button class="afbtn" onclick="setArea(1,this)">Área 1</button>
       <button class="afbtn" onclick="setArea(2,this)">Área 2</button>
       <button class="afbtn" onclick="setArea(3,this)">Área 3</button>
     </div>
-    <span class="area-filter-hint" id="area-hint">Filtra métricas, tiendas y personas</span>
   </div>
 
   <div class="mgrid">
@@ -99,6 +107,7 @@
   <div class="sec">
     <div class="sh" onclick="tog('area')"><h2>Participación y resultados por área</h2><span class="chev open" id="ch-area">▾</span></div>
     <div class="sb open" id="bd-area">
+      <div id="area-tabs-inner" style="display:none"></div>
       <div class="crow">
         <div><div class="clbl">% Participación</div><div style="position:relative;height:200px"><canvas id="cArea" role="img" aria-label="Participación por área"></canvas></div></div>
         <div><div class="clbl">Nota promedio</div><div style="position:relative;height:200px"><canvas id="cScore" role="img" aria-label="Nota promedio por área"></canvas></div></div>
@@ -107,8 +116,17 @@
   </div>
 
   <div class="sec">
-    <div class="sh" onclick="tog('store')"><h2>Detalle por tienda</h2><span class="chev" id="ch-store">▾</span></div>
-    <div class="sb" id="bd-store">
+    <div class="sh" onclick="tog('store')">
+      <h2>Detalle por tienda</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="store-search-wrap" onclick="event.stopPropagation()">
+          <span style="color:#bbb;font-size:14px">🔍</span>
+          <input type="text" id="store-search" placeholder="Buscar tienda..." oninput="filterByStore(this.value)" style="border:none;background:transparent;outline:none;font-size:13px;color:#1a1a18;width:140px">
+        </div>
+        <span class="chev open" id="ch-store">▾</span>
+      </div>
+    </div>
+    <div class="sb open" id="bd-store">
       <div style="padding-top:16px">
         <table><thead><tr><th>Tienda</th><th>Área</th><th>Nómina</th><th>Respondieron</th><th>Participación</th><th>Nota prom.</th><th>% Aprobados</th></tr></thead>
         <tbody id="store-tb"></tbody></table>
@@ -623,7 +641,8 @@ const GID_RESP   = '1142498963';
 const GID_NOMINA = '1331171004';
 
 let cA=null, cS=null;
-let ACTIVE_AREA = 0; // 0 = todas
+let ACTIVE_AREA = 0;  // 0 = todas las áreas
+let STORE_SEARCH = ''; // texto del buscador de tienda
 
 const sc = s => { const m=String(s||'').match(/^(\d+)/); return m?+m[1]:null; };
 
@@ -753,8 +772,6 @@ function renderAll(rawResp, nom) {
     options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24}},plugins:{legend:{display:false}},scales:{y:{max:22,ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}
   });
 
-  $('area-tabs').innerHTML=`<button class="tab on" onclick="aF(0,this)">Todas</button>`+aL.map((l,i)=>`<button class="tab" onclick="aF(${i+1},this)">${l} — ${aPt[i]}% part.</button>`).join('');
-
   const stTb=$('store-tb'), fsSel=$('fStore');
   stTb.innerHTML=''; fsSel.innerHTML='<option value="">Todas las tiendas</option>';
   STORES.forEach(s=>{
@@ -806,47 +823,52 @@ function renderAll(rawResp, nom) {
 }
 
 function filterP(){
-  const srch=document.getElementById('srch').value.toLowerCase();
-  const fs=document.getElementById('fStore').value.toUpperCase();
-  const fr=document.getElementById('fResult').value;
-  let n=0;
-  document.getElementById('people-tb').querySelectorAll('tr').forEach(tr=>{
-    const okArea = !ACTIVE_AREA || tr.dataset.area == ACTIVE_AREA;
-    const ok = okArea
-      && (!srch || tr.dataset.name.includes(srch) || tr.dataset.store.toLowerCase().includes(srch))
-      && (!fs || tr.dataset.store === fs)
-      && (!fr || tr.dataset.result === fr);
-    tr.style.display=ok?'':'none'; if(ok)n++;
+  const srch = (document.getElementById('srch').value||'').toLowerCase();
+  const fs   = (document.getElementById('fStore').value||'').toUpperCase();
+  const fr   = document.getElementById('fResult').value||'';
+  let n = 0;
+  document.getElementById('people-tb').querySelectorAll('tr').forEach(tr => {
+    const okArea   = !ACTIVE_AREA  || tr.dataset.area  == ACTIVE_AREA;
+    const okSearch = !STORE_SEARCH || tr.dataset.store.toLowerCase().includes(STORE_SEARCH);
+    const okName   = !srch || tr.dataset.name.includes(srch) || tr.dataset.store.toLowerCase().includes(srch);
+    const okStore  = !fs   || tr.dataset.store === fs;
+    const okResult = !fr   || tr.dataset.result === fr;
+    const ok = okArea && okSearch && okName && okStore && okResult;
+    tr.style.display = ok ? '' : 'none';
+    if (ok) n++;
   });
-  document.getElementById('pcount').textContent=`Mostrando ${n} personas`;
+  document.getElementById('pcount').textContent = `Mostrando ${n} personas`;
 }
 
 function setArea(a, btn) {
   ACTIVE_AREA = a;
-  // Update filter bar buttons
+  // Botones de área activos
   document.querySelectorAll('.afbtn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  // Update hint
-  const hints = ['Filtra métricas, tiendas y personas','Solo tiendas y personas del Área 1','Solo tiendas y personas del Área 2','Solo tiendas y personas del Área 3'];
-  document.getElementById('area-hint').textContent = hints[a];
-  // Filter store table
-  document.getElementById('store-tb').querySelectorAll('tr').forEach(tr => {
-    tr.style.display = (!a || tr.dataset.area == a) ? '' : 'none';
-  });
-  // Reset store dropdown if selected store is not in this area
-  const fStore = document.getElementById('fStore');
-  if (fStore.value && a) {
-    const storeRows = document.getElementById('store-tb').querySelectorAll('tr');
-    let storeInArea = false;
-    storeRows.forEach(tr => {
-      if (tr.dataset.store === fStore.value && tr.dataset.area == a) storeInArea = true;
-    });
-    if (!storeInArea) fStore.value = '';
-  }
-  // Filter people table (respects existing text/store/result filters too)
-  filterP();
-  // Update charts to reflect area selection
+  // Limpiar buscador de tienda al cambiar área
+  const storeSearchEl = document.getElementById('store-search');
+  if (storeSearchEl) storeSearchEl.value = '';
+  STORE_SEARCH = '';
+  // Aplicar filtros
+  applyFilters();
+  // Actualizar colores de gráficos
   updateCharts();
+}
+
+function filterByStore(val) {
+  STORE_SEARCH = val.trim().toLowerCase();
+  applyFilters();
+}
+
+function applyFilters() {
+  // Filtrar tabla de tiendas
+  document.getElementById('store-tb').querySelectorAll('tr').forEach(tr => {
+    const areaOk = !ACTIVE_AREA || tr.dataset.area == ACTIVE_AREA;
+    const searchOk = !STORE_SEARCH || tr.dataset.store.toLowerCase().includes(STORE_SEARCH);
+    tr.style.display = (areaOk && searchOk) ? '' : 'none';
+  });
+  // Filtrar tabla de personas
+  filterP();
 }
 
 function aF(a,btn){ setArea(a,btn); }
@@ -898,18 +920,22 @@ async function tryLive(){
   const btn=document.getElementById('btn-live');
   btn.textContent='⏳ Actualizando...'; btn.disabled=true;
 
-  // Timeout de 8 segundos — si no responde, usamos datos embebidos
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  // Timeout de 12 segundos usando Promise.race (más compatible con redirects)
+  const fetchWithTimeout = (url, ms) => {
+    const fetchPromise = fetch(url);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), ms)
+    );
+    return Promise.race([fetchPromise, timeoutPromise]);
+  };
 
   try {
-    const r1 = await fetch(`${API}?gid=${GID_RESP}`, { signal: controller.signal });
-    clearTimeout(timeout);
+    const r1 = await fetchWithTimeout(`${API}?gid=${GID_RESP}`, 12000);
     if(!r1.ok) throw new Error(`HTTP ${r1.status}`);
     const txt1 = await r1.text();
 
-    // Validar que la respuesta parece un CSV real (tiene comas y filas)
-    if (!txt1 || txt1.split('\n').length < 3) throw new Error('Respuesta vacía o inválida');
+    // Validar que la respuesta parece un CSV real
+    if (!txt1 || txt1.trim().length < 50) throw new Error('Respuesta vacía o inválida');
 
     const rawResp = parseCSV(txt1);
     const resp = rawResp.slice(1).filter(r=>r[0]&&r[2]).map(r => {
@@ -936,7 +962,6 @@ async function tryLive(){
     setTimeout(()=>{btn.textContent='↻ Refrescar';btn.disabled=false;},2000);
 
   } catch(e) {
-    clearTimeout(timeout);
     const reason = e.name === 'AbortError'
       ? 'Sin respuesta del servidor — mostrando datos del 18/6/2026'
       : 'Sin conexión — mostrando datos del 18/6/2026';
