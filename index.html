@@ -883,33 +883,49 @@ function parseCSV(txt){
   }).filter(r=>r.some(x=>x));
 }
 
+function showEmbedded(reason) {
+  renderAll(RESP_DATA, NOM_DATA);
+  const btn = document.getElementById('btn-live');
+  btn.textContent='↻ Refrescar'; btn.disabled=false;
+  document.getElementById('upd').textContent = reason;
+  document.getElementById('mode-badge').textContent = 'Datos embebidos';
+  document.getElementById('mode-badge').style.background = '#faeeda';
+  document.getElementById('mode-badge').style.color = '#854f0b';
+  document.getElementById('info-banner').style.display = 'block';
+}
+
 async function tryLive(){
   const btn=document.getElementById('btn-live');
   btn.textContent='⏳ Actualizando...'; btn.disabled=true;
+
+  // Timeout de 8 segundos — si no responde, usamos datos embebidos
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
   try {
-    // Llamamos a nuestro propio Apps Script — sin CORS, sin proxies
-    const r1 = await fetch(`${API}?gid=${GID_RESP}`);
+    const r1 = await fetch(`${API}?gid=${GID_RESP}`, { signal: controller.signal });
+    clearTimeout(timeout);
     if(!r1.ok) throw new Error(`HTTP ${r1.status}`);
     const txt1 = await r1.text();
+
+    // Validar que la respuesta parece un CSV real (tiene comas y filas)
+    if (!txt1 || txt1.split('\n').length < 3) throw new Error('Respuesta vacía o inválida');
+
     const rawResp = parseCSV(txt1);
-    // Apps Script puede devolver fecha larga ("Wed Jun 10 2026...") y score como número puro ("14")
-    // Normalizamos para que el resto del código funcione igual
     const resp = rawResp.slice(1).filter(r=>r[0]&&r[2]).map(r => {
       const rr = [...r];
-      // Normalizar score: si es número puro sin " / 20", lo añadimos
       if (rr[1] && /^\d+$/.test(rr[1].trim())) rr[1] = rr[1].trim() + ' / 20';
-      // Asegurar que col 15 = TIENDA y col 16 = AREA (buscar si no están ahí)
       const foundStore = storeCol(rr);
       if (foundStore && (rr[15]||'').toUpperCase().trim() !== foundStore) {
-        // Encontramos la tienda en otra columna — la ponemos en 15 y el área en 16
         rr[15] = foundStore;
         rr[16] = String(STORE_AREA[foundStore] || '');
       }
       return rr;
     });
 
-    // Siempre usamos NOM_DATA embebida para la nómina — es la fuente más confiable
-    // El live fetch solo actualiza las respuestas
+    // Si no se parseó ninguna respuesta válida, usar embebidos
+    if (resp.length < 5) throw new Error('No se encontraron respuestas válidas en el CSV');
+
     renderAll(resp, NOM_DATA);
     document.getElementById('upd').textContent='En vivo — '+new Date().toLocaleString('es-AR');
     document.getElementById('mode-badge').textContent='En vivo';
@@ -918,22 +934,25 @@ async function tryLive(){
     document.getElementById('info-banner').style.display='none';
     btn.textContent='✓ Actualizado';
     setTimeout(()=>{btn.textContent='↻ Refrescar';btn.disabled=false;},2000);
+
   } catch(e) {
-    btn.textContent='↻ Refrescar'; btn.disabled=false;
-    // Fallback: show embedded data + error banner
-    renderAll(RESP_DATA, NOM_DATA);
-    document.getElementById('upd').textContent = 'Sin conexión — datos al 18/6/2026';
-    document.getElementById('mode-badge').textContent = 'Sin conexión';
-    document.getElementById('mode-badge').style.background = '#faeeda';
-    document.getElementById('mode-badge').style.color = '#854f0b';
-    document.getElementById('info-banner').style.display = 'block';
+    clearTimeout(timeout);
+    const reason = e.name === 'AbortError'
+      ? 'Sin respuesta del servidor — mostrando datos del 18/6/2026'
+      : 'Sin conexión — mostrando datos del 18/6/2026';
+    showEmbedded(reason);
   }
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
-// Carga en vivo automáticamente al abrir la página
-// Si falla, cae al fallback con datos embebidos
-tryLive();
+// Esperar a que el DOM esté listo antes de tocar cualquier elemento
+document.addEventListener('DOMContentLoaded', () => {
+  // Mostrar datos embebidos de inmediato
+  renderAll(RESP_DATA, NOM_DATA);
+  document.getElementById('mode-badge').textContent = 'Actualizando...';
+  // Luego intentar cargar datos en vivo por encima
+  tryLive();
+});
 </script>
 </body>
 </html>
